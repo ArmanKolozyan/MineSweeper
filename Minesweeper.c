@@ -8,99 +8,99 @@ mijn stapt en het spel verliest.
 #include <stdlib.h>
 #include <time.h>
 
-int amount_of_bombs = 3;
-int rows = 4;
-int columns = 4;
+const int total_bombs = 4;
+const int rows = 4;
+const int columns = 4;
+int placed_flags = 0;
+int correct_placed_flags = 0;
 int game_over = 0;
-struct cell
-{
+int game_won = 0;
+int remaining_nonbomb_cells = rows * columns - total_bombs;
+
+struct cell {
     int bomb;
     int revealed;
-    int neighbours_bombs_count;
+    int neighbours_count;
+    int flagged;
 };
 
-void initialize_field(struct cell playing_field[][columns])
-{
-    srand(time(0));
+void initialize_field(struct cell playing_field[][columns], int n_r, int n_c) {
+  //  srand(time(0));
     int placed_bombs = 0;
-    for (int i = 0; i < rows; i++)
-    {
-        for (int j = 0; j < columns; j++)
-        {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < columns; j++) {
             struct cell *current_cell = &playing_field[i][j];
             current_cell->revealed = 0;
-            current_cell->neighbours_bombs_count = 0; /* default values geven? */
-            if ((placed_bombs < amount_of_bombs) && ((rand() % 10) < 3))
-            {
-                current_cell->bomb = 1;
+            current_cell->flagged = 0;
+            current_cell->neighbours_count = 0; /* default values geven? */
+            current_cell->bomb = 0;
+        }
+    }
+    while (1) {
+        int bomb_row = rand() % 4;
+        int bomb_column = rand() % 4;
+        if ((bomb_row != n_r) || (bomb_column != n_c)) {
+            struct cell *bomb_cell = &playing_field[bomb_row][bomb_column];
+            if (!bomb_cell->bomb) {
+                bomb_cell->bomb = 1;
                 placed_bombs++;
-            }
-            else
-            {
-                current_cell->bomb = 0;
+                if (placed_bombs == total_bombs) {
+                    break;
+                }
             }
         }
     }
 }
 
-void calculate_neighbours_bombs(struct cell playing_field[][columns])
-{
-    for (int i = 0; i < rows; i++)
-    {
-        for (int j = 0; j < columns; j++)
-        {
+void calculate_neighbours_bombs(struct cell playing_field[][columns]) {
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < columns; j++) {
             struct cell *current_cell = &playing_field[i][j];
-            if (current_cell->bomb == 1)
-            {
+            if (current_cell->bomb == 1) {
                 continue;
             }
             {
                 int total_bombs = 0;
-                for (int off_i = -1; off_i <= 1; off_i++)
-                {
-                    for (int off_j = -1; off_j <= 1; off_j++)
-                    {
+                for (int off_i = -1; off_i <= 1; off_i++) {
+                    for (int off_j = -1; off_j <= 1; off_j++) {
                         int neighbour_i = i + off_i;
                         int neighbour_j = j + off_j;
-                        if ((neighbour_i < 0) || (neighbour_i >= rows))
-                        {
+                        if ((neighbour_i < 0) || (neighbour_i >= rows)) {
                             continue;
                         }
-                        if ((neighbour_j < 0) || (neighbour_j >= columns))
-                        {
+                        if ((neighbour_j < 0) || (neighbour_j >= columns)) {
                             continue;
                         }
                         {
                             struct cell *neighbour = &playing_field[neighbour_i][neighbour_j];
-                            if (neighbour->bomb)
-                            {
+                            if (neighbour->bomb) {
                                 total_bombs++;
                             }
                         }
                     }
                 }
-                current_cell->neighbours_bombs_count = total_bombs;
+                current_cell->neighbours_count = total_bombs;
             }
         }
     }
 }
 
-void print_board(struct cell (*playing_field)[columns])
-{
+void print_field(struct cell (*playing_field)[columns], int reveal_all) {
     printf("\n\n");
-    printf ("     0 1 2 3\n");
-    for (int i = 0; i < rows; i++)
-    {
-        printf("   %i", i); 
-        for (int j = 0; j < columns; j++)
-        {
+    printf("     0 1 2 3\n");
+    for (int i = 0; i < rows; i++) {
+        printf("   %i", i);
+        for (int j = 0; j < columns; j++) {
             struct cell *current_cell = &playing_field[i][j];
-            if (current_cell->revealed)
-            {
-                printf(" %i", current_cell->neighbours_bombs_count);
-            }
-            else
-            {
+            if (current_cell->revealed || current_cell->flagged || reveal_all) {
+                if (current_cell->flagged) { // sequence of conidition checks plays a crucial role
+                    printf(" F");
+                } else if (!current_cell->bomb) {
+                    printf(" %i", current_cell->neighbours_count);
+                } else {
+                    printf(" B", current_cell->neighbours_count);
+                }
+            } else {
                 printf(" !");
             };
         }
@@ -108,43 +108,142 @@ void print_board(struct cell (*playing_field)[columns])
     }
 }
 
-void reveal(struct cell playing_field[][columns], int r, int c)
-{
-    struct cell *the_cell = &playing_field[r][c];
-    if (the_cell->bomb)
-    {
-        game_over = 1;
-    }
-    else
-    {
-        the_cell->revealed = 1;
+void remove_flag(struct cell *the_cell) { // altijd zo'n argument meegeven!!
+    the_cell->flagged = 0;
+    placed_flags--;
+    if (the_cell->bomb) {
+        correct_placed_flags--;
     }
 }
 
-void main(void)
-{
-    struct cell playing_field[4][4];
-    initialize_field(playing_field);
-    calculate_neighbours_bombs(playing_field);
-    char command;
-    int user_row;
-    int user_column;
-    while (!game_over)
-    {
-        printf("Write your command: \n");
-        while (scanf("%c %i %i", &command, &user_row, &user_column) != 3)
-        {
-            printf("Wrong command! Try again:\n");
+void place_flag(struct cell playing_field[][columns], int i, int j) {
+    struct cell *the_cell = &playing_field[i][j];
+    if (!the_cell->flagged) {
+        if (the_cell->revealed) {
+            printf("Action cannot be done. Cell already revealed.");
+        } else if (placed_flags < total_bombs) {
+            the_cell->flagged = 1;
+            placed_flags++;
+            if (the_cell->bomb) {
+                correct_placed_flags++;
+                if (correct_placed_flags == total_bombs) {
+                    game_won = 1;
+                }
+            }
+        } else {
+            printf("No flags left!");
         }
-        if (command == 'r')
-        {
-            reveal(playing_field, user_row, user_column);
-            print_board(playing_field);
+    } else {
+        remove_flag(the_cell);
+    }
+}
+
+void reveal(struct cell playing_field[][columns], int i, int j) {
+    struct cell *the_cell = &playing_field[i][j];
+    if (the_cell->bomb) {
+        game_over = 1;
+    } else if (the_cell->revealed) {
+        return;
+    } else {
+        the_cell->revealed = 1;
+        remaining_nonbomb_cells--;
+        if (the_cell->flagged) {
+            remove_flag(the_cell);
         }
-        else
-        {
-            printf("Wrong command! Try again:\n");
+        if (remaining_nonbomb_cells == 0) {
+            game_won = 1;
+        }
+        if (the_cell->neighbours_count == 0) {
+            for (int off_i = -1; off_i <= 1; off_i++) {
+                for (int off_j = -1; off_j <= 1; off_j++) {
+                    int neighbour_i = i + off_i;
+                    int neighbour_j = j + off_j;
+                    if ((neighbour_i < 0) || (neighbour_i >= rows)) {
+                        continue;
+                    }
+                    if ((neighbour_j < 0) || (neighbour_j >= columns)) {
+                        continue;
+                    }
+                    {
+                        struct cell *neighbour = &playing_field[neighbour_i][neighbour_j];
+                        if (!neighbour->revealed) // otherwise infinite loop (constantly asking each other to reveal themselves
+                        {
+                            reveal(playing_field, neighbour_i, neighbour_j);
+                        }
+                    }
+                }
+            }
         }
     }
-    printf("Game over!");
+}
+
+void clear_input() {
+    char c;
+    while ((c = getchar()) != '\n' && c != EOF) {
+        ;
+    }
+}
+
+int get_arguments(int *user_row, int *user_column) {
+    char userInput[10];
+    fgets(userInput, 9, stdin);
+    if (sscanf(userInput, "%i %i", user_row, user_column) < 2) // als er 3 args zijn neem ik 2, no prob?
+    {
+        printf("Too few arguments! Try again.\n");
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+void get_input(char *command, int *user_row, int *user_column) {
+    printf("Write your command: \n");
+    *command = getchar();
+    if (*command == 'p') {
+        ;
+    } else if ((*command == 'r' || *command == 'f') && getchar() == ' ') {
+        if (!get_arguments(user_row, user_column)) {
+            get_input(command, user_row, user_column);
+        }
+    } else {
+        printf("Wrong command! Try again.\n");
+        clear_input();
+        get_input(command, user_row, user_column);
+    }
+}
+
+void handle_input(struct cell playing_field[][columns], char command, int row, int column) {
+    if (command == 'r') // 'r' enz. globale variabelen maken als bv. REVEAL_KEY
+    {
+        reveal(playing_field, row, column);
+        print_field(playing_field, 0);
+    } else if (command == 'f') {
+        place_flag(playing_field, row, column);
+        print_field(playing_field, 0);
+    } else if (command == 'p') {
+        print_field(playing_field, 1);
+        game_over = 1;
+    }
+}
+
+void main(void) {
+    struct cell playing_field[4][4]; // globaal maken
+    char command;
+    int user_row = rand() % rows; // will be overwritten if command is 'r' or 'f'
+    int user_column = rand() % columns;
+    get_input(&command, &user_row, &user_column);
+    initialize_field(playing_field, user_row, user_column);
+    calculate_neighbours_bombs(playing_field);
+    handle_input(playing_field, command, user_row, user_column);
+    while (!game_over && !game_won) {
+        get_input(&command, &user_row, &user_column);
+        handle_input(playing_field, command, user_row, user_column);
+    }
+    if (game_won) {
+        printf("You won! Good job!");
+        print_field(playing_field, 1);
+    } else {
+        print_field(playing_field, 1);
+        printf("\nGame over!");
+    }
 }
