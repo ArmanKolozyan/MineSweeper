@@ -1,2 +1,2 @@
 # MineSweeper
-First game project in C for school, second year of Computer Sciene.
+First game project in C for university, second year of Computer Sciene.
