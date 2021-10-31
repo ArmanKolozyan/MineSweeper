@@ -24,9 +24,8 @@ struct cell {
     int flagged;
 };
 
-void initialize_field(struct cell playing_field[][columns], int n_r, int n_c) {
-  //  srand(time(0));
-    int placed_bombs = 0;
+void initialize_field(struct cell playing_field[][columns]) {
+    srand(time(0));
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < columns; j++) {
             struct cell *current_cell = &playing_field[i][j];
@@ -36,6 +35,10 @@ void initialize_field(struct cell playing_field[][columns], int n_r, int n_c) {
             current_cell->bomb = 0;
         }
     }
+}
+
+void install_bombs(struct cell playing_field[][columns], int n_r, int n_c) {
+    int placed_bombs = 0;
     while (1) {
         int bomb_row = rand() % 4;
         int bomb_column = rand() % 4;
@@ -51,6 +54,31 @@ void initialize_field(struct cell playing_field[][columns], int n_r, int n_c) {
         }
     }
 }
+
+void print_field(struct cell (*playing_field)[columns], int reveal_all) {
+    printf("\n");
+    printf("      0    1    2    3\n");
+    for (int i = 0; i < rows; i++) {
+        printf("   %i|", i);
+        for (int j = 0; j < columns; j++) {
+            struct cell *current_cell = &playing_field[i][j];
+            if (current_cell->revealed || current_cell->flagged || reveal_all) {
+                if (current_cell->flagged) { // sequence of conidition checks plays a crucial role
+                    printf(" F ||");
+                } else if (!current_cell->bomb) {
+                    printf(" %i ||", current_cell->neighbours_count);
+                } else {
+                    printf(" B ||", current_cell->neighbours_count);
+                }
+            } else {
+                printf("   ||");
+            };
+        }
+        printf("\n");
+    }
+}
+
+// cell operations
 
 void calculate_neighbours_bombs(struct cell playing_field[][columns]) {
     for (int i = 0; i < rows; i++) {
@@ -82,29 +110,6 @@ void calculate_neighbours_bombs(struct cell playing_field[][columns]) {
                 current_cell->neighbours_count = total_bombs;
             }
         }
-    }
-}
-
-void print_field(struct cell (*playing_field)[columns], int reveal_all) {
-    printf("\n\n");
-    printf("     0 1 2 3\n");
-    for (int i = 0; i < rows; i++) {
-        printf("   %i", i);
-        for (int j = 0; j < columns; j++) {
-            struct cell *current_cell = &playing_field[i][j];
-            if (current_cell->revealed || current_cell->flagged || reveal_all) {
-                if (current_cell->flagged) { // sequence of conidition checks plays a crucial role
-                    printf(" F");
-                } else if (!current_cell->bomb) {
-                    printf(" %i", current_cell->neighbours_count);
-                } else {
-                    printf(" B", current_cell->neighbours_count);
-                }
-            } else {
-                printf(" !");
-            };
-        }
-        printf("\n");
     }
 }
 
@@ -177,6 +182,9 @@ void reveal(struct cell playing_field[][columns], int i, int j) {
     }
 }
 
+// cell operations
+
+// input
 void clear_input() {
     char c;
     while ((c = getchar()) != '\n' && c != EOF) {
@@ -226,13 +234,17 @@ void handle_input(struct cell playing_field[][columns], char command, int row, i
     }
 }
 
+// input
+
 void main(void) {
-    struct cell playing_field[4][4]; // globaal maken
     char command;
     int user_row = rand() % rows; // will be overwritten if command is 'r' or 'f'
     int user_column = rand() % columns;
+    struct cell playing_field[4][4]; // globaal maken
+    initialize_field(playing_field);
+    print_field(playing_field, 0);
     get_input(&command, &user_row, &user_column);
-    initialize_field(playing_field, user_row, user_column);
+    install_bombs(playing_field, user_row, user_column);
     calculate_neighbours_bombs(playing_field);
     handle_input(playing_field, command, user_row, user_column);
     while (!game_over && !game_won) {
