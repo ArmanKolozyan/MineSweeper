@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 const int total_bombs = 4;
 const int rows = 4;
@@ -10,13 +11,13 @@ int correct_placed_flags = 0;
 int game_over = 0;
 int game_won = 0;
 int remaining_nonbomb_cells = rows * columns - total_bombs;
-
 struct cell {
     int bomb;
     int revealed;
     int flagged;
     int neighbours_count;
 };
+struct cell playing_field[4][4]; // globaal maken
 
 void initialize_field(struct cell playing_field[][columns]) {
     srand(time(0));
@@ -112,7 +113,7 @@ void remove_flag(struct cell *the_cell);
 void place_flag(struct cell *the_cell) {
     if (!the_cell->flagged) {
         if (the_cell->revealed) {
-            printf("Action cannot be done. Cell is revealed.");
+            printf("Action cannot be done. Cell is revealed.\n");
         } else if (placed_flags < total_bombs) {
             the_cell->flagged = 1;
             placed_flags++;
@@ -203,11 +204,15 @@ int get_arguments(int *user_row, int *user_column) {
     if (sscanf(userInput, "%i %i", user_row, user_column) < 2) // als er 3 args zijn neem ik 2, no prob?
     {
         printf("Too few arguments! Try again.\n");
+        sleep(2);
+        print_field(playing_field, 0);
         return 0;
     } else if (check_boundries(*user_row, *user_column)) {
         return 1;
     } else {
         printf("Input is out of bounds! Try again.\n");
+        sleep(2);
+        print_field(playing_field, 0);
         return 0;
     }
 }
@@ -225,9 +230,13 @@ void get_input(char *command, int *user_row, int *user_column) {
         }
     } else if ((*command == 'r' || *command == 'f') && after_command == '\n') {
         printf("Please provide arguments after the command!\n");
+        sleep(2);
+        print_field(playing_field, 0);
         get_input(command, user_row, user_column);
     } else {
         printf("Wrong command! Try again.\n");
+        sleep(2);
+        print_field(playing_field, 0);
         clear_input();
         get_input(command, user_row, user_column);
     }
@@ -242,7 +251,6 @@ void handle_input(struct cell playing_field[][columns], char *command, int *user
         place_flag(&playing_field[*user_row][*user_column]);
         print_field(playing_field, 0);
     } else if (*command == 'p') {
-        print_field(playing_field, 1);
         game_over = 1;
     }
 }
@@ -253,7 +261,6 @@ void main(void) {
     char command;
     int user_row = rand() % rows; // will be overwritten if command is 'r' or 'f'
     int user_column = rand() % columns;
-    struct cell playing_field[4][4]; // globaal maken
     initialize_field(playing_field);
     print_field(playing_field, 0);
     get_input(&command, &user_row, &user_column);
