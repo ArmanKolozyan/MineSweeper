@@ -114,6 +114,7 @@ void place_flag(struct cell *the_cell) {
     if (!the_cell->flagged) {
         if (the_cell->revealed) {
             printf("Action cannot be done. Cell is revealed.\n");
+            sleep(2);
         } else if (placed_flags < total_bombs) {
             the_cell->flagged = 1;
             placed_flags++;
@@ -147,6 +148,7 @@ void reveal(struct cell playing_field[][columns], int row, int column) {
         game_over = 1;
     } else if (the_cell->revealed) {
         printf("Cell is already revealed!\n");
+        sleep(2);
     } else {
         the_cell->revealed = 1;
         remaining_nonbomb_cells--;
