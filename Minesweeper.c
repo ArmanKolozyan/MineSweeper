@@ -190,7 +190,7 @@ void reveal_neighbours(struct cell playing_field[][columns], int row, int column
 void clear_input() {
     char c;
     while ((c = getchar()) != '\n' && c != EOF) { //getchar() returns EOF in the event of a read error, so the loop should test for EOF also
-        break;
+        ;
     }
 }
 
