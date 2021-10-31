@@ -56,7 +56,7 @@ void install_bombs(struct cell playing_field[][columns], int n_r, int n_c) {
 }
 
 void print_field(struct cell (*playing_field)[columns], int reveal_all) {
-    printf("\n");
+    printf("Remaining flags: %i\n", total_bombs - placed_flags);
     printf("      0    1    2    3\n");
     for (int i = 0; i < rows; i++) {
         printf("   %i|", i);
