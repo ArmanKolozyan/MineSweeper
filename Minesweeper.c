@@ -3,30 +3,41 @@
 #include <time.h>
 #include <unistd.h>
 
-const int total_bombs = 4;
-const int rows = 4;
-const int columns = 4;
+const int total_bombs = 10;
+const int rows = 10;
+const int columns = 10;
 int placed_flags = 0;
 int correct_placed_flags = 0;
 int game_over = 0;
 int game_won = 0;
 int remaining_nonbomb_cells = rows * columns - total_bombs;
+
+enum Boolean {
+    FALSE = 0,
+    TRUE
+};
+
+enum Command {
+    REVEAL = 'r',
+    PRINT = 'p',
+    FLAG = 'f'
+}; // hoofdletters ook checken?
+
 struct cell {
-    int bomb;
-    int revealed;
-    int flagged;
+    enum Boolean bomb;
+    enum Boolean revealed;
+    enum Boolean flagged;
     int neighbours_count;
 };
-struct cell playing_field[4][4]; // globaal maken
 
 void initialize_field(struct cell playing_field[][columns]) {
     srand(time(0));
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < columns; j++) {
             struct cell *current_cell = &playing_field[i][j];
-            current_cell->bomb = 0;
-            current_cell->revealed = 0;
-            current_cell->flagged = 0;
+            current_cell->bomb = FALSE;
+            current_cell->revealed = FALSE;
+            current_cell->flagged = FALSE;
             current_cell->neighbours_count = 0; /* default values geven? */
         }
     }
@@ -40,7 +51,7 @@ void install_bombs(struct cell playing_field[][columns], int first_chosen_row, i
         if ((bomb_row != first_chosen_row) || (bomb_column != first_chosen_column)) {
             struct cell *bomb_cell = &playing_field[bomb_row][bomb_column];
             if (!bomb_cell->bomb) {
-                bomb_cell->bomb = 1;
+                bomb_cell->bomb = TRUE;
                 placed_bombs++;
                 if (placed_bombs == total_bombs) {
                     break;
@@ -50,11 +61,19 @@ void install_bombs(struct cell playing_field[][columns], int first_chosen_row, i
     }
 }
 
+void print_column_numbers() {
+    printf("      ");
+    for (int i = 0; i < columns; i++) {
+        printf("%i    ", i);
+    }
+    printf("\n");
+}
+
 void print_field(struct cell (*playing_field)[columns], int reveal_all) {
     if (!reveal_all) {
         printf("Remaining flags: %i\n", total_bombs - placed_flags);
     }
-    printf("      0    1    2    3\n");
+    print_column_numbers();
     for (int i = 0; i < rows; i++) {
         printf("   %i|", i);
         for (int j = 0; j < columns; j++) {
@@ -118,7 +137,7 @@ void place_flag(struct cell *the_cell) {
             printf("Action cannot be done. Cell is revealed.\n");
             sleep(2);
         } else if (placed_flags < total_bombs) {
-            the_cell->flagged = 1;
+            the_cell->flagged = TRUE;
             placed_flags++;
             if (the_cell->bomb) {
                 correct_placed_flags++;
@@ -135,7 +154,7 @@ void place_flag(struct cell *the_cell) {
 }
 
 void remove_flag(struct cell *the_cell) { // altijd zo'n argument meegeven!!
-    the_cell->flagged = 0;
+    the_cell->flagged = FALSE;
     placed_flags--;
     if (the_cell->bomb) {
         correct_placed_flags--;
@@ -152,7 +171,7 @@ void reveal(struct cell playing_field[][columns], int row, int column) {
         printf("Cell is already revealed!\n");
         sleep(2);
     } else {
-        the_cell->revealed = 1;
+        the_cell->revealed = TRUE;
         remaining_nonbomb_cells--;
         if (the_cell->flagged) {
             remove_flag(the_cell);
@@ -202,84 +221,94 @@ int check_boundries(int user_row, int user_column) {
     return ((user_row >= 0) && (user_row < rows) && (user_column >= 0) && (user_column < columns));
 }
 
-int get_arguments(int *user_row, int *user_column) {
-    char userInput[10];
-    fgets(userInput, 9, stdin);
-    if (sscanf(userInput, "%i %i", user_row, user_column) < 2) // als er 3 args zijn neem ik 2, no prob?
-    {
-        printf("Too few arguments! Try again.\n");
+int get_arguments(struct cell playing_field[][columns], int *user_row, int *user_column) {
+    if (scanf("%i %i", user_row, user_column) != 2) {
+        printf("Please provide numbers as arguments.\n");
+        clear_input();
         sleep(2);
-        print_field(playing_field, 0);
         return 0;
-    } else if (check_boundries(*user_row, *user_column)) {
+    }; // if 3 args, I take 2
+    if (check_boundries(*user_row, *user_column)) {
+        clear_input();
         return 1;
     } else {
         printf("Input is out of bounds! Try again.\n");
+        clear_input(); // check of '\n' in array zit, zo ja => doe niks anders clear_input
         sleep(2);
         print_field(playing_field, 0);
         return 0;
     }
 }
 
-void get_input(char *command, int *user_row, int *user_column) {
+void get_input(struct cell playing_field[][columns], enum Command *command, int *user_row, int *user_column) {
     char after_command;
     printf("Write your command: \n");
     *command = getchar();
     after_command = getchar();
-    if (*command == 'p' && after_command == '\n') {
+    if (*command == PRINT && after_command == '\n') {
         ;
-    } else if ((*command == 'r' || *command == 'f') && after_command == ' ') {
-        if (!get_arguments(user_row, user_column)) {
-            get_input(command, user_row, user_column);
+    } else if ((*command == REVEAL || *command == FLAG) && after_command == ' ') {
+        if (!get_arguments(playing_field, user_row, user_column)) {
+            print_field(playing_field, 0);
+            get_input(playing_field, command, user_row, user_column);
         }
-    } else if ((*command == 'r' || *command == 'f') && after_command == '\n') {
+    } else if ((*command == REVEAL || *command == FLAG) && after_command == '\n') {
         printf("Please provide arguments after the command!\n");
         sleep(2);
         print_field(playing_field, 0);
-        get_input(command, user_row, user_column);
+        get_input(playing_field, command, user_row, user_column);
     } else {
         printf("Wrong command! Try again.\n");
         sleep(2);
         print_field(playing_field, 0);
         clear_input();
-        get_input(command, user_row, user_column);
+        get_input(playing_field, command, user_row, user_column);
     }
 }
 
-void handle_input(struct cell playing_field[][columns], char *command, int *user_row, int *user_column) {
-    if (*command == 'r') // 'r' enz. globale variabelen maken als bv. REVEAL_KEY
+void handle_input(struct cell playing_field[][columns], enum Command *command, int *user_row, int *user_column) {
+    if (*command == REVEAL) // 'r' enz. globale variabelen maken als bv. REVEAL_KEY
     {
         reveal(playing_field, *user_row, *user_column);
         print_field(playing_field, 0);
-    } else if (*command == 'f') {
+    } else if (*command == FLAG) {
         place_flag(&playing_field[*user_row][*user_column]);
         print_field(playing_field, 0);
-    } else if (*command == 'p') {
-        game_over = 1;
+    } else if (*command == PRINT) {
+        print_field(playing_field, 1);
     }
+}
+
+enum Boolean handle_replay() {
+    printf("Press ENTER if you want to replay!\n");
+    getchar() == '\n';
 }
 
 // input
 
-void main(void) {
-    char command;
+void main() {
+    struct cell playing_field[rows][columns]; // globaal maken
+    enum Command command;
     int user_row = rand() % rows; // will be overwritten if command is 'r' or 'f'
     int user_column = rand() % columns;
     initialize_field(playing_field);
     print_field(playing_field, 0);
-    get_input(&command, &user_row, &user_column);
+    get_input(playing_field, &command, &user_row, &user_column);
     install_bombs(playing_field, user_row, user_column);
     calculate_neighbours_bombs(playing_field);
     handle_input(playing_field, &command, &user_row, &user_column);
     while (!game_over && !game_won) {
-        get_input(&command, &user_row, &user_column);
+        get_input(playing_field, &command, &user_row, &user_column);
         handle_input(playing_field, &command, &user_row, &user_column);
     }
     if (game_won) {
-        printf("You won! Good job!");
+        printf("\nYOU WON! GOOD JOB!\n"); // mogelijkheid om opnieuw te spelen!
         print_field(playing_field, 1);
     } else {
         print_field(playing_field, 1);
-        printf("\nGame over!");
+        printf("\nGAME OVER!\n");
+    }
+    if (handle_replay()) {
+        main();
     }
 }
