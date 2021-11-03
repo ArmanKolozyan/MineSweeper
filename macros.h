@@ -1,8 +1,8 @@
-#ifndef usefulMacros
-#define usefulMacros
+#ifndef useful_macros
+#define useful_macros
 
-#define total_bombs 15
-#define rows 10
-#define columns 10
+#define TOTAL_BOMBS 15
+#define ROWS 10
+#define COLUMNS 10
 
 #endif

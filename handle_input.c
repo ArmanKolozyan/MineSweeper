@@ -1,4 +1,4 @@
-#include "handleInput.h"
+#include "handle_input.h"
 #include "cell.h"
 #include "macros.h"
 #include <stdio.h>
@@ -19,7 +19,7 @@ void clear_input() {
 Checks if the given column/row is not outisde the field.
 */
 enum Boolean check_boundaries(int user_row, int user_column) {
-    return ((user_row >= 0) && (user_row < rows) && (user_column >= 0) && (user_column < columns));
+    return ((user_row >= 0) && (user_row < ROWS) && (user_column >= 0) && (user_column < COLUMNS));
 }
 
 /*
@@ -47,7 +47,7 @@ enum Boolean get_arguments(int *user_row, int *user_column) {
 /*
 "get_input" makes sure that "command", "user_row" and "user_column" contain (correct) values given by the player.
 */
-void get_input(struct cell playing_field[rows][columns], enum Command *command, int *user_row, int *user_column) {
+void get_input(struct cell playing_field[ROWS][COLUMNS], enum Command *command, int *user_row, int *user_column) {
     printf("Write your command: \n");
     char after_command;
     *command = getchar();
@@ -74,7 +74,7 @@ void get_input(struct cell playing_field[rows][columns], enum Command *command, 
 /*
 "process_input" makes sure that, depending on the command, the correct action is performed.
 */
-void process_input(struct cell playing_field[][columns], enum Command *command, int *user_row, int *user_column, int *placed_flags, int *correct_placed_flags) {
+void process_input(struct cell playing_field[][COLUMNS], enum Command *command, int *user_row, int *user_column, int *placed_flags, int *correct_placed_flags) {
     if (*command == REVEAL) {
         reveal(playing_field, *user_row, *user_column, placed_flags, correct_placed_flags);
     } else if (*command == FLAG) {

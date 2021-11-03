@@ -1,14 +1,14 @@
-all: main.o cell.o handleInput.o printing.o
-	gcc main.o cell.o handleInput.o printing.o -o MineSweeper
+all: main.o cell.o handle_input.o printing.o
+	gcc main.o cell.o handle_input.o printing.o -o MineSweeper
 
-main.o: MineSweeper.c cell.h datatypes.h handleInput.h macros.h printing.h
-	gcc MineSweeper.c -c -o main.o
+main.o: Minesweeper.c cell.h datatypes.h handle_input.h macros.h printing.h
+	gcc Minesweeper.c -c -o main.o
 
 cell.o: cell.c cell.h datatypes.h macros.h
 	gcc cell.c -c -o cell.o
 
-handleInput.o: handleInput.c handleInput.h cell.h datatypes.h macros.h 
-	gcc handleInput.c -c -o handleInput.o
+handleInput.o: handle_input.c handle_input.h cell.h datatypes.h macros.h 
+	gcc handleInput.c -c -o handle_input.o
 
 printing.o: printing.c printing.h macros.h 
 	gcc printing.c -c -o printing.o

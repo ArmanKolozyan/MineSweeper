@@ -1,5 +1,5 @@
-#ifndef handleInput
-#define handleInput
+#ifndef handle_input
+#define handle_input
 
 #include "datatypes.h"
 

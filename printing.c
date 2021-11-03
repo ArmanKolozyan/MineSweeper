@@ -4,7 +4,7 @@
 
 void print_column_numbers() {
     printf("      ");
-    for (int i = 0; i < columns; i++) {
+    for (int i = 0; i < COLUMNS; i++) {
         printf("%i    ", i);
     }
     printf("\n");
@@ -14,12 +14,12 @@ void print_column_numbers() {
 If the entire revealed field is to be printed(at the end of the game, or after the PRINT command), 
 then this function is given a boolean TRUE as its second argument, in all other cases it is given the boolean FALSE.
 */
-void print_field(struct cell playing_field[rows][columns], enum Boolean reveal_all, int placed_flags) {
-    printf("Remaining flags: %i\n", total_bombs - placed_flags);
+void print_field(struct cell playing_field[ROWS][COLUMNS], enum Boolean reveal_all, int placed_flags) {
+    printf("Remaining flags: %i\n", TOTAL_BOMBS - placed_flags);
     print_column_numbers();
-    for (int i = 0; i < rows; i++) {
+    for (int i = 0; i < ROWS; i++) {
         printf("   %i|", i);
-        for (int j = 0; j < columns; j++) {
+        for (int j = 0; j < COLUMNS; j++) {
             struct cell *current_cell = &playing_field[i][j];
             if (current_cell->revealed || current_cell->flagged || reveal_all) {
                 if (current_cell->flagged && !reveal_all) { // sequence of conidition checks plays a crucial role, because otherwise a flagged cell would contain the neighbours_count on the screen
