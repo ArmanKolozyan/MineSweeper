@@ -2,6 +2,7 @@
 // game:     MineSweeper (Command Line Version)
 // author:   Arman Kolozyan
 // year:     2021-2022
+// course:   Structuur van Computerprogramma's II
 // -------------------------------------------------------------------
 
 #include "cell.h"
