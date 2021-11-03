@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <unistd.h> //for the sleep-function
 
-
 int remaining_nonbomb_cells = rows * columns - total_bombs;
 extern enum Boolean game_won;
 extern enum Boolean game_over;
@@ -42,6 +41,14 @@ void calculate_neighbours_bombs(struct cell playing_field[rows][columns]) {
     }
 }
 
+void remove_flag(struct cell *the_cell, int *placed_flags, int *correct_placed_flags) {
+    the_cell->flagged = FALSE;
+    (*placed_flags)--;
+    if (the_cell->bomb) {
+        (*correct_placed_flags)--;
+    }
+}
+
 void place_flag(struct cell *the_cell, int *placed_flags, int *correct_placed_flags) {
     if (!the_cell->flagged) {
         if (the_cell->revealed) {
@@ -60,22 +67,16 @@ void place_flag(struct cell *the_cell, int *placed_flags, int *correct_placed_fl
             printf("No flags left!\n");
         }
     } else {
-        remove_flag(the_cell, placed_flags, correct_placed_flags);
+        remove_flag(the_cell, placed_flags, correct_placed_flags); // if the cell was already flagged, the player gets his flag back
     }
 }
 
-void remove_flag(struct cell *the_cell, int *placed_flags, int *correct_placed_flags) { 
-    the_cell->flagged = FALSE;
-    (*placed_flags)--;
-    if (the_cell->bomb) {
-        (*correct_placed_flags)--;
-    }
-}
+void reveal_neighbours(struct cell playing_field[rows][columns], int row, int column, int *placed_flags, int *correct_placed_flags);
 
-void reveal(struct cell playing_field[][columns], int row, int column, int *placed_flags, int *correct_placed_flags) {
+void reveal(struct cell playing_field[rows][columns], int row, int column, int *placed_flags, int *correct_placed_flags) {
     struct cell *the_cell = &playing_field[row][column];
     if (the_cell->flagged) {
-        remove_flag(the_cell, placed_flags, correct_placed_flags); // personal choice: if the player wants to reveal a flagged cell, the flag is given back to the player before the reveal  
+        remove_flag(the_cell, placed_flags, correct_placed_flags); // personal choice: if the player wants to reveal a flagged cell, the flag is given back to the player before the reveal
     }
     if (the_cell->bomb) {
         game_over = 1;
@@ -94,7 +95,11 @@ void reveal(struct cell playing_field[][columns], int row, int column, int *plac
     }
 }
 
-void reveal_neighbours(struct cell playing_field[][columns], int row, int column, int *placed_flags, int *correct_placed_flags) {
+/*
+If a cell is revealed that does not contain a mine in any of its neighboring cells, all those neighboring cells are revealed too. This process also repeats for each of these neighbors 
+whose neighbours_count equals zero.
+*/
+void reveal_neighbours(struct cell playing_field[rows][columns], int row, int column, int *placed_flags, int *correct_placed_flags) {
     for (int off_i = -1; off_i <= 1; off_i++) {
         for (int off_j = -1; off_j <= 1; off_j++) { // checking all the neighbours
             int neighbour_i = row + off_i;
