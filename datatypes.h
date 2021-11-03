@@ -7,9 +7,9 @@ enum Boolean {
 };
 
 enum Command {
-    REVEAL = 'r',
-    PRINT = 'p',
-    FLAG = 'f'
+    REVEAL = 'R',
+    PRINT = 'P',
+    FLAG = 'F'
 };
 
 struct cell {

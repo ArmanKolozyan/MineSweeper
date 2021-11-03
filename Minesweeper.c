@@ -73,8 +73,8 @@ the first command is handled separately to ensure that the first given row and c
 */
 void initialize(struct cell playing_field[ROWS][COLUMNS], int *placed_flags, int *correct_placed_flags, enum Command *command, int *user_row, int *user_column) {
     initialize_field(playing_field);
-    printf("Welcome to MineSweeper!\n\nPlease type the first letter of one of the commands below along with the necessary arguments in digits.\n");
-    printf("p(rint)\nr(eveal) [row] [column]\nf(lag) [row] [column]\n\n");
+    printf("Welcome to MineSweeper!\n\nPlease type the first letter (in uppercase) of one of the commands below along with the necessary arguments in digits.\n");
+    printf("P(rint)\nR(eveal) [row] [column]\nF(lag) [row] [column]\n\n");
     printf("Have fun playing!\n\n\n");
     print_field(playing_field, FALSE, *placed_flags);
     get_input(playing_field, command, user_row, user_column);

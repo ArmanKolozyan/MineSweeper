@@ -5,7 +5,10 @@
 void print_column_numbers() {
     printf("      ");
     for (int i = 0; i < COLUMNS; i++) {
-        printf("%i    ", i);
+        printf("%i   ", i);
+        if (i < 10) { // makes code more general: columns consisting of 2 digits are also printed nicely
+            printf(" ");
+        }
     }
     printf("\n");
 }
@@ -18,7 +21,10 @@ void print_field(struct cell playing_field[ROWS][COLUMNS], enum Boolean reveal_a
     printf("Remaining flags: %i\n", TOTAL_BOMBS - placed_flags);
     print_column_numbers();
     for (int i = 0; i < ROWS; i++) {
-        printf("   %i|", i);
+        if (i < 10) {
+            printf(" "); // makes code more general: rows consisting of 2 digits are also printed nicely
+        }
+        printf("  %i|", i);
         for (int j = 0; j < COLUMNS; j++) {
             struct cell *current_cell = &playing_field[i][j];
             if (current_cell->revealed || current_cell->flagged || reveal_all) {

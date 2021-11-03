@@ -7,8 +7,8 @@ main.o: Minesweeper.c cell.h datatypes.h handle_input.h macros.h printing.h
 cell.o: cell.c cell.h datatypes.h macros.h
 	gcc cell.c -c -o cell.o
 
-handleInput.o: handle_input.c handle_input.h cell.h datatypes.h macros.h 
-	gcc handleInput.c -c -o handle_input.o
+handle_input.o: handle_input.c handle_input.h cell.h datatypes.h macros.h 
+	gcc handle_input.c -c -o handle_input.o
 
-printing.o: printing.c printing.h macros.h 
+printing.o: printing.c printing.h datatypes.h macros.h 
 	gcc printing.c -c -o printing.o
